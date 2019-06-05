@@ -154,7 +154,8 @@ if args.model == "mdan":
         mdan.eval()
         target_insts = torch.tensor(target_insts, requires_grad=False).to(device)
         target_labels = torch.tensor(target_labels)
-        preds_labels = torch.max(mdan.inference(target_insts), 1)[1].cpu().data.squeeze_()
+        #preds_labels = torch.max(mdan.inference(target_insts), 1)[1].cpu().data.squeeze_()
+        preds_labels = torch.max(mdan.inference(target_insts), 1)[1].cpu().data
         pred_acc = torch.sum(preds_labels == target_labels).item() / float(target_insts.size(0))
         error_dicts[data_name[i]] = preds_labels.numpy() != target_labels.numpy()
         logger.info("Prediction accuracy on {} = {}, time used = {} seconds.".
