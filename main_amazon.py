@@ -36,11 +36,15 @@ parser.add_argument("-o", "--mode", help="Mode of combination rule for MDANet: [
 args = parser.parse_args()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-logger = get_logger(args.name)
+logger = get_logger(args.name)  # amazon
 
 # Set random number seed.
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
+
+## ==============================
+# Loading Dataset
+## ==============================
 # Loading the randomly partition the amazon data set.
 time_start = time.time()
 amazon = np.load("./amazon.npz")
@@ -48,8 +52,8 @@ amazon_xx = coo_matrix((amazon['xx_data'], (amazon['xx_col'], amazon['xx_row']))
                        shape=amazon['xx_shape'][::-1]).tocsc()
 amazon_xx = amazon_xx[:, :args.dimension]
 amazon_yy = amazon['yy']
-amazon_yy = (amazon_yy + 1) / 2
-amazon_offset = amazon['offset'].flatten()
+amazon_yy = (amazon_yy + 1) / 2   # transform to [0,1]
+amazon_offset = amazon['offset'].flatten()  # offset for each domain
 time_end = time.time()
 logger.info("Time used to process the Amazon data set = {} seconds.".format(time_end - time_start))
 logger.info("Number of training instances = {}, number of features = {}."
