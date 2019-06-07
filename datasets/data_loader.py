@@ -16,10 +16,10 @@ LOADER_MAPPING = {
     "skt": sketch_loader
 }
 
-def load_data(valid_code, is_train = True):
+def load_data(valid_code, is_train = True, resize = None):
     
     loader = LOADER_MAPPING[valid_code]
 
-    dataset = loader.get_dataset(is_train)
+    dataset = loader.get_dataset(is_train, resize)
     
     return dataset
