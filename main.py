@@ -16,7 +16,8 @@ from utils import multi_data_loader
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--name", help="Name used to save the log file.", type=str, default="amazon")
+parser.add_argument("-t", "--target", help="The target domain", type=str, default="rel")
+parser.add_argument("-n", "--name", help="Name used to save the log file.", type=str, default="multi-source")
 parser.add_argument("-f", "--frac", help="Fraction of the supervised training data to be used.",
                     type=float, default=1.0)
 parser.add_argument("-s", "--seed", help="Random seed.", type=int, default=42)

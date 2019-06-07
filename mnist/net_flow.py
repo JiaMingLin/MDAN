@@ -12,16 +12,16 @@ import mnist_data_ph
 
 class NetFlow(object):
     def __init__(self, model_params, load_train, load_test):
-        load_dapt = model_params['adapt']
+        load_dapt = model_params['adapt']   # true
 
-        self.load_train = load_train
-        self.load_dapt = load_dapt
-        self.load_test = load_test
+        self.load_train = load_train  # true
+        self.load_dapt = load_dapt    # true
+        self.load_test = load_test    # true
         self.model_params = model_params
 
         if load_train:
             self.source_data_input = list()
-            for i in range(model_params["source_num"]):
+            for i in range(model_params["source_num"]):  # source_num = 1, source_type1 = MNIST
                 self.source_data_input.append(
                     mnist_data_input.DataInput(model_params,
                                                model_params['source_type%d' % (
@@ -30,7 +30,7 @@ class NetFlow(object):
 
         if load_dapt:
             self.target_data_input = list()
-            for i in range(model_params["target_num"]):
+            for i in range(model_params["target_num"]):  # target_num = 1, target_type1 = MNIST
                 self.target_data_input.append(
                     mnist_data_input.DataInput(model_params,
                                                model_params['target_type%d' % (

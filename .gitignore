@@ -1,4 +1,6 @@
-data/
 *.log
 *.pkl
+
+data/
+logs/
 __pycache__/

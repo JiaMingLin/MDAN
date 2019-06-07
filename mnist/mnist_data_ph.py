@@ -4,7 +4,7 @@ import tensorflow as tf
 class DataPh(object):
     def __init__(self, model_params):
         batch_size = model_params['batch_size']
-        if model_params['adapt']:
+        if model_params['adapt']:    # true
             batch_size *= model_params["source_num"] + \
                 model_params["target_num"]
         else:
