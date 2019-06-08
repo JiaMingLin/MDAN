@@ -28,8 +28,9 @@ from torch.utils.data import DataLoader
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--target", help="The target domain", type=str)
 parser.add_argument("-n", "--name", help="Test case display name.", type=str)
-parser.add_argument("-e", "--total_epoch", help="Number of training epochs", type=int, default=1)
+parser.add_argument("-e", "--total_epoch", help="Number of training epochs", type=int, default=3)
 parser.add_argument("-b", "--batch_size", help="Batch size during training", type=int, default=4)
+parser.add_argument("-c", "--class_number", help="The number of class.", type=int, default=0)
 parser.add_argument("-r", "--learning_rate", help="Learning rate during training", type=float, default=0.001)
 parser.add_argument("-s", "--seed", help="Random seed.", type=int, default=42)
 """
@@ -57,8 +58,10 @@ target = args.target
 name = args.name
 total_epoch = args.total_epoch
 batch_size = args.batch_size
+class_number = args.class_number
 learning_rate = args.learning_rate
 seed = args.seed
+
 
 test_case_place = os.path.join(constant.logs_root, name)
 if os.path.isdir(test_case_place):
@@ -85,8 +88,8 @@ train_val_batch_size = {
     'val':1
 }
 image_dataset = {
-    'train': dl.load_data(target, is_train = True, resize = image_size),
-    'val': dl.load_data(target, is_train = False, resize = image_size)
+    'train': dl.load_data(target, is_train = True, resize = image_size, class_num = class_number),
+    'val': dl.load_data(target, is_train = False, resize = image_size, class_num = class_number)
 }
 
 dataloaders = {
