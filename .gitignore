@@ -1,7 +1,9 @@
 *.log
 *.pkl
 *.pt
+*._
 
 data/
 logs/
 __pycache__/
+

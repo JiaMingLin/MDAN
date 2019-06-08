@@ -3,7 +3,7 @@ from torchvision import datasets, transforms
 from .datagen import TestDataGenerator
 import constant
 
-def get_dataset(train, resize = None):
+def get_dataset(train, resize = None, class_num = 0):
     """Get real dataset loader."""
     
     name = 'test'

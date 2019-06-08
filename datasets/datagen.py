@@ -5,7 +5,7 @@ from PIL import Image
 import constant
 
 class DataGenerator(data.Dataset):
-    def __init__(self, dataset_name, train = True, transform=None):
+    def __init__(self, dataset_name, train = True, transform=None, class_num = 0):
         """
         Args:
             1. image folder
@@ -37,6 +37,21 @@ class DataGenerator(data.Dataset):
         
         self.classes = [name for name in os.listdir(os.path.join(constant.data_root, dataset_name)) if 'csv' not in name]
         self.classes = sorted(self.classes, key=lambda s: s.lower())
+
+        if class_num > 0:
+            pick_class_code = list(range(class_num))
+            temp_img_path = []
+            temp_img_label = []
+            for (img_path, label) in zip(self.img_paths, self.img_labels):
+                if label in pick_class_code:
+                    temp_img_path.append(img_path)
+                    temp_img_label.append(label)
+            
+            self.img_paths = temp_img_path
+            self.img_labels = temp_img_label
+            self.classes = self.classes[:class_num]
+
+
 
     def __getitem__(self, idx):
         

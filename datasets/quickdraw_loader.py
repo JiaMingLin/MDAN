@@ -3,7 +3,7 @@ from torchvision import datasets, transforms
 from .datagen import DataGenerator
 import constant
 
-def get_dataset(train, resize = None):
+def get_dataset(train, resize = None, class_num = 0):
     """Get real dataset loader."""
     
     name = 'quickdraw'
@@ -33,7 +33,8 @@ def get_dataset(train, resize = None):
     dataset = DataGenerator(
         dataset_name = name,
         train = train,
-        transform = transform
+        transform = transform,
+        class_num = class_num
     )
 
     return dataset
