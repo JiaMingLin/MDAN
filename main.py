@@ -217,7 +217,7 @@ def val(epoch):
         # backward + optimize only if in training phase
         running_loss += loss.item() * inputs.size(0)
         running_corrects += torch.sum(preds == labels.data)
-        break
+
     epoch_loss = running_loss / dataset_sizes['val']
     epoch_acc = running_corrects.double() / dataset_sizes['val']
             
@@ -246,9 +246,9 @@ def val(epoch):
     val_acc.append(epoch_acc)
 
 for epoch in range(total_epoch):
-    #train(epoch)
-    val(epoch)
-    if (epoch+1) % 10 == 0:
+    train(epoch)
+    #val(epoch)
+    if (epoch+1) % 5 == 0:
         val(epoch)
 ## ==============================
 # Produce Submit
