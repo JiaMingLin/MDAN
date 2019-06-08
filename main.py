@@ -181,7 +181,7 @@ def train(epoch):
                 epoch, total_epoch,
                 iteration, int(dataset_sizes['train']/float(train_val_batch_size['train'])),
                 (running_loss/(float(train_val_batch_size['train']) * iteration)), 
-                (running_corrects/(float(train_val_batch_size['train']) * iteration)) 
+                (running_corrects.double()/(float(train_val_batch_size['train']) * iteration)) 
             ))
         
         
@@ -274,7 +274,7 @@ for inputs, img_path in test_dataloader:
         
 result = []
 for (image_path, pred) in predictions:
-    result.append('{},{}\n'.format(image_path, pred))
+    result.append('{},{}\n'.format(image_path[0], pred))
     
 with open(os.path.join(test_case_place, 'submit_{}.txt'.format(name)), 'w+') as fout:
     fout.write('image_name,label\n')
