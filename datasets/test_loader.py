@@ -1,12 +1,12 @@
 import torch
 from torchvision import datasets, transforms
-from .datagen import DataGenerator
+from .datagen import TestDataGenerator
 import constant
 
 def get_dataset(train, resize = None):
     """Get real dataset loader."""
     
-    name = 'real'
+    name = 'test'
     # image pre-processing
     transform_pipline = []
     if resize is not None:
@@ -30,7 +30,7 @@ def get_dataset(train, resize = None):
     transform = transforms.Compose(transform_pipline)
     
     # dataset and data loader
-    dataset = DataGenerator(
+    dataset = TestDataGenerator(
         dataset_name = name,
         train = train,
         transform = transform
