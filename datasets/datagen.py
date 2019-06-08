@@ -43,7 +43,7 @@ class DataGenerator(data.Dataset):
             temp_img_path = []
             temp_img_label = []
             for (img_path, label) in zip(self.img_paths, self.img_labels):
-                if label in pick_class_code:
+                if int(label) in pick_class_code:
                     temp_img_path.append(img_path)
                     temp_img_label.append(label)
             
