@@ -263,18 +263,17 @@ model.load_state_dict(best_model_wts)
 predictions = []
 
 logger.info('Predicting the test images...')
-for inputs in test_dataloader:
+for inputs, img_path in test_dataloader:
     inputs = inputs.to(device)
 
     # forward
     with torch.set_grad_enabled(False):
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
-        predictions.append(preds)
+        predictions.append((img_path, preds.item()))
         
-predictions = [data.item() for data in predictions]
 result = []
-for (image_path, pred) in  zip(test_dataset.img_paths, predictions):
+for (image_path, pred) in predictions:
     result.append('{},{}\n'.format(image_path, pred))
     
 with open(os.path.join(test_case_place, 'submit_{}.txt'.format(name)), 'w+') as fout:

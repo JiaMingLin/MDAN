@@ -32,15 +32,21 @@ class MDANet(nn.Module):
         super(MDANet, self).__init__()
         self.input_dim = configs["input_dim"]
         self.num_hidden_layers = len(configs["hidden_layers"])
+
+        # number of neurons in each layer [5000, 1000, 500, 100]
         self.num_neurons = [self.input_dim] + configs["hidden_layers"]
+
         self.num_domains = configs["num_domains"]
+
         # Parameters of hidden, fully-connected layers, feature learning component.
         self.hiddens = nn.ModuleList([nn.Linear(self.num_neurons[i], self.num_neurons[i+1])
                                       for i in range(self.num_hidden_layers)])
         # Parameter of the final softmax classification layer.
         self.softmax = nn.Linear(self.num_neurons[-1], configs["num_classes"])
+
         # Parameter of the domain classification layer, multiple sources single target domain adaptation.
         self.domains = nn.ModuleList([nn.Linear(self.num_neurons[-1], 2) for _ in range(self.num_domains)])
+
         # Gradient reversal layer.
         self.grls = [GradientReversalLayer() for _ in range(self.num_domains)]
 
@@ -50,16 +56,22 @@ class MDANet(nn.Module):
         :param tinputs:     Input from the target domain.
         :return:
         """
+        ## ===================================
+        # Extract features
+        ## ===================================
         sh_relu, th_relu = sinputs, tinputs
         for i in range(self.num_domains):
             for hidden in self.hiddens:
                 sh_relu[i] = F.relu(hidden(sh_relu[i]))
         for hidden in self.hiddens:
             th_relu = F.relu(hidden(th_relu))
+
+
         # Classification probabilities on k source domains.
         logprobs = []
         for i in range(self.num_domains):
             logprobs.append(F.log_softmax(self.softmax(sh_relu[i]), dim=1))
+
         # Domain classification accuracies.
         sdomains, tdomains = [], []
         for i in range(self.num_domains):
