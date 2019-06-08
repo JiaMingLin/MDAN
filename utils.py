@@ -61,3 +61,6 @@ def multi_data_loader(inputs, targets, batch_size, shuffle=True):
             ys.append(targets[i][ridx])
         yield xs, ys
 
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
