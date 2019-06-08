@@ -95,16 +95,16 @@ class TestDataGenerator(data.Dataset):
     def __getitem__(self, idx):
         
         img_path = self.img_paths[idx]
-        img_path = os.path.join(constant.data_root, img_path)
+        img_full_path = os.path.join(constant.data_root, img_path)
         
-        with open(img_path, 'rb') as f:
+        with open(img_full_path, 'rb') as f:
             img = Image.open(f)
             img = img.convert('RGB')
 
         if self.transform is not None:
             img = self.transform(img)
 
-        return img
+        return img, img_path
 
     def __len__(self):
         return len(self.img_paths)
