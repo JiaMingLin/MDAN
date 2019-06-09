@@ -41,6 +41,9 @@ def data_loader(inputs, targets, batch_size, shuffle=True):
 
 def multi_data_loader(inputs, targets, batch_size, shuffle=True):
     """
+    Args:
+        1. inputs: list of multi-source domain data
+        2. target: the label of source
     Both inputs and targets are list of numpy arrays, containing instances and labels from multiple sources.
     """
     assert len(inputs) == len(targets)

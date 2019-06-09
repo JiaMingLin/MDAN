@@ -1,20 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import time
-import argparse
-import pickle
+from __future__ import print_function, division
+
+import constant
+from utils import get_logger, get_lr
+from datasets import data_loader as dl
+
 import torch
+import time
+import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
-from scipy.sparse import coo_matrix
-from model import MDANet
-from utils import get_logger
-from utils import data_loader
-from utils import multi_data_loader
+import numpy as np
+import torchvision
+import matplotlib.pyplot as plt
+import time
+import os
+import copy
+import argparse
+import shutil
 
+from tensorboardX import SummaryWriter
+from torchvision import datasets, models, transforms
+from torch.optim import lr_scheduler
+from torch.utils.data import DataLoader
 
+"""
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", help="Name used to save the log file.", type=str, default="amazon")
 parser.add_argument("-f", "--frac", help="Fraction of the supervised training data to be used.",
@@ -43,100 +54,41 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 ## ==============================
-# Loading Dataset
+# Preparing Dataset
 ## ==============================
-# Loading the randomly partition the amazon data set.
-time_start = time.time()
-amazon = np.load("./amazon.npz")
-amazon_xx = coo_matrix((amazon['xx_data'], (amazon['xx_col'], amazon['xx_row'])),
-                       shape=amazon['xx_shape'][::-1]).tocsc()
-amazon_xx = amazon_xx[:, :args.dimension]
-amazon_yy = amazon['yy']
-amazon_yy = (amazon_yy + 1) / 2   # transform to [0,1]
-amazon_offset = amazon['offset'].flatten()  # offset for each domain
-time_end = time.time()
-logger.info("Time used to process the Amazon data set = {} seconds.".format(time_end - time_start))
-logger.info("Number of training instances = {}, number of features = {}."
-             .format(amazon_xx.shape[0], amazon_xx.shape[1]))
-logger.info("Number of nonzero elements = {}".format(amazon_xx.nnz))
-logger.info("amazon_xx shape = {}.".format(amazon_xx.shape))
-logger.info("amazon_yy shape = {}.".format(amazon_yy.shape))
-# Partition the data into four categories and for each category partition the data set into training and test set.
-data_name = ["books", "dvd", "electronics", "kitchen"]
-num_data_sets = 4
-data_insts, data_labels, num_insts = [], [], []
-for i in range(num_data_sets):
-    data_insts.append(amazon_xx[amazon_offset[i]: amazon_offset[i+1], :])
-    data_labels.append(amazon_yy[amazon_offset[i]: amazon_offset[i+1], :])
-    logger.info("Length of the {} data set label list = {}, label values = {}, label balance = {}".format(
-        data_name[i],
-        amazon_yy[amazon_offset[i]: amazon_offset[i + 1], :].shape[0],
-        np.unique(amazon_yy[amazon_offset[i]: amazon_offset[i+1], :]),
-        np.sum(amazon_yy[amazon_offset[i]: amazon_offset[i+1], :])
-    ))
-    num_insts.append(amazon_offset[i+1] - amazon_offset[i])
-    # Randomly shuffle.
-    r_order = np.arange(num_insts[i])
-    np.random.shuffle(r_order)
-    data_insts[i] = data_insts[i][r_order, :]
-    data_labels[i] = data_labels[i][r_order, :]
+image_size = (224,224)
+
 logger.info("Data sets: {}".format(data_name))
 logger.info("Number of total instances in the data sets: {}".format(num_insts))
-# Partition the data set into training and test parts, following the convention in the ICML-2012 paper, use a fixed
-# amount of instances as training and the rest as test.
-num_trains = int(2000 * args.frac)
-input_dim = amazon_xx.shape[1]   # 5000
-# The confusion matrix stores the prediction accuracy between the source and the target tasks. The row index the source
-# task and the column index the target task.
-results = {}
-logger.info("Training fraction = {}, number of actual training data instances = {}".format(args.frac, num_trains))
+
+
 logger.info("-" * 100)
+"""
+num_data_sets = 4
+for i in range(num_data_sets):
+    ## ========================= 
+    # Build source instances.
+    ## ========================= 
+    
+    ## ========================= 
+    # Build target instances.
+    ## ========================= 
 
-if args.model == "mdan":
-    configs = {"input_dim": input_dim, "hidden_layers": [1000, 500, 100], "num_classes": 2,
-               "num_epochs": args.epoch, "batch_size": args.batch_size, "lr": 1.0, "mu": args.mu, "num_domains":
-                   num_data_sets - 1, "mode": args.mode, "gamma": 10.0, "verbose": args.verbose}
-    num_epochs = configs["num_epochs"]
-    batch_size = configs["batch_size"]
-    num_domains = configs["num_domains"]
-    lr = configs["lr"]
-    mu = configs["mu"]
-    gamma = configs["gamma"]
-    mode = configs["mode"]   # minmax or dynamic
-    logger.info("Training with domain adaptation using PyTorch madnNet: ")
-    logger.info("Hyperparameter setting = {}.".format(configs))
-    error_dicts = {}
-    for i in range(num_data_sets):
-        ## ========================= 
-        # Build source instances.
-        ## ========================= 
-        source_insts = []
-        source_labels = []
-        for j in range(num_data_sets):
-            if j != i:
-                source_insts.append(data_insts[j][:num_trains, :].todense().astype(np.float32))
-                source_labels.append(data_labels[j][:num_trains, :].ravel().astype(np.int64))
-        print(len(source_insts)) #
-        ## ========================= 
-        # Build target instances.
-        ## ========================= 
-        target_idx = i
-        target_insts = data_insts[i][num_trains:, :].todense().astype(np.float32)
-        target_labels = data_labels[i][num_trains:, :].ravel().astype(np.int64)
+    ## ========================= 
+    # Train MDAN.
+    ## ========================= 
+    mdan = MDANet(configs).to(device)
+    optimizer = optim.Adadelta(mdan.parameters(), lr=lr)
+    mdan.train()
+    # Training phase.
+    time_start = time.time()
+    for t in range(num_epochs):
+        running_loss = 0.0
 
-        ## ========================= 
-        # Train DannNet.
-        ## ========================= 
-        mdan = MDANet(configs).to(device)
-        optimizer = optim.Adadelta(mdan.parameters(), lr=lr)
-        mdan.train()
-        # Training phase.
-        time_start = time.time()
-        for t in range(num_epochs):
-            running_loss = 0.0
+        # one batch, xs for all source domains, ys is the label
+        train_loader = dl.multiple_data_loader(['rel', 'sketch', 'inf'],32, resize = (224,224))
 
-            # one batch, xs for all source domains, ys for target domain
-            train_loader = multi_data_loader(source_insts, source_labels, batch_size)
+"""
             for xs, ys in train_loader:
                 slabels = torch.ones(batch_size, requires_grad=False).type(torch.LongTensor).to(device)
                 tlabels = torch.zeros(batch_size, requires_grad=False).type(torch.LongTensor).to(device)
@@ -181,4 +133,4 @@ if args.model == "mdan":
     logger.info("*" * 100)
 else:
     raise ValueError("No support for the following model: {}.".format(args.model))
-
+"""
