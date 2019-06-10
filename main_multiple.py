@@ -122,7 +122,7 @@ for target in ['rel']:
     logger.info("Starting training...")
     
     for epoch in range(total_epoch):
-        scheduler_warmup.step()
+        
         running_loss = 0.0
         running_cls_loss = 0.0
         running_domain_loss = 0.0
@@ -200,6 +200,9 @@ for target in ['rel']:
         writer.add_scalar('Classfication_Loss', running_cls_loss/train_dataset_size)
         writer.add_scalar('Domain_Loss', running_domain_loss/train_dataset_size)
         writer.add_scalar('Learning_Rate', get_lr(optimizer))
+
+        # 
+        scheduler_warmup.step(epoch, metrics=(running_loss/train_dataset_size))
         
         ## ========================= 
         # model validation 
