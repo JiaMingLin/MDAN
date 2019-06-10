@@ -6,7 +6,7 @@ from __future__ import print_function, division
 import constant
 from utils import get_logger, get_lr
 from datasets import data_loader as dl
-from models.model_fectory import MDANet
+from models.model_fectory import MDANet, load_model
 from warmup_scheduler import GradualWarmupScheduler
 
 import numpy as np
@@ -100,7 +100,7 @@ for target in ['rel']:
     ## ==========================
     # Initialize MDAN model
     ## ==========================
-    mdan = MDANet(class_number, len(sources)).to(device)
+    mdan = load_model('mdan', class_number, len(sources)).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
     # Decay LR by a factor of 0.1 every 7 epochs
     scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
