@@ -208,9 +208,6 @@ def val(epoch):
         inputs = inputs.to(device)
         labels = labels.to(device)
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
-
         # forward
         with torch.set_grad_enabled(False):
             outputs = model(inputs)

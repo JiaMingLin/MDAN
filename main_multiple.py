@@ -30,11 +30,11 @@ from torch.utils.data import DataLoader
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--name", help="Test case display name.", type=str, default = 'test_alexnet_multi_1')
+parser.add_argument("-n", "--name", help="Test case display name.", type=str, default = 'test_alexnet_multi_2')
 parser.add_argument("-e", "--total_epoch", help="Number of training epochs", type=int, default=100)
 parser.add_argument("-b", "--batch_size", help="Batch size during training", type=int, default=32)
 parser.add_argument("-c", "--class_number", help="The number of class.", type=int, default=345)
-parser.add_argument("-r", "--learning_rate", help="Learning rate during training", type=float, default=0.001)
+parser.add_argument("-r", "--learning_rate", help="Learning rate during training", type=float, default=0.002)
 parser.add_argument("-s", "--seed", help="Random seed.", type=int, default=42)
 
 ## ===============================
@@ -49,8 +49,8 @@ learning_rate = args.learning_rate
 seed = args.seed
 gamma = 10
 mu = 1e-2
-val_model_epoch = 5
-train_msg_iter = 10
+val_model_epoch = 3
+train_msg_iter = 100
 resize = (224,224)
 
 ## ===============================
@@ -101,6 +101,8 @@ for target in ['rel']:
     ## ==========================
     mdan = MDANet(class_number, len(sources)).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
+    # Decay LR by a factor of 0.1 every 7 epochs
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     mdan.train()
     
     ## ==========================
@@ -115,6 +117,7 @@ for target in ['rel']:
     print("Starting training...")
     
     for epoch in range(total_epoch):
+        scheduler.step()
         running_loss = 0.0
         running_cls_loss = 0.0
         running_domain_loss = 0.0
@@ -188,6 +191,7 @@ for target in ['rel']:
         writer.add_scalar('Training_Loss', running_loss/train_dataset_size)
         writer.add_scalar('Classfication_Loss', running_cls_loss/train_dataset_size)
         writer.add_scalar('Domain_Loss', running_domain_loss/train_dataset_size)
+        writer.add_scalar('Learning_Rate', get_lr(optimizer))
         
         ## ========================= 
         # model validation 
