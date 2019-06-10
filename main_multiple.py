@@ -16,6 +16,7 @@ import os
 import copy
 import argparse
 import shutil
+import read_config
 
 import torch
 import torch.nn as nn
@@ -31,23 +32,21 @@ from torch.utils.data import DataLoader
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--name", help="Test case display name.", type=str, default = 'test_alexnet_multi_2')
-parser.add_argument("-e", "--total_epoch", help="Number of training epochs", type=int, default=100)
-parser.add_argument("-b", "--batch_size", help="Batch size during training", type=int, default=32)
-parser.add_argument("-c", "--class_number", help="The number of class.", type=int, default=345)
-parser.add_argument("-r", "--learning_rate", help="Learning rate during training", type=float, default=0.002)
-parser.add_argument("-s", "--seed", help="Random seed.", type=int, default=42)
+parser.add_argument('--config_file_path', type=str, default='conf_files/config')
 
 ## ===============================
 # Compile and configure all the model parameters.
 ## ===============================
 args = parser.parse_args()
-name = args.name
-total_epoch = args.total_epoch
-batch_size = args.batch_size
-class_number = args.class_number
-learning_rate = args.learning_rate
-seed = args.seed
+config = read_config.read(args.config_file_path)
+print(config)
+name = config['name']
+total_epoch = config['total_epoch']
+batch_size = config['batch_size']
+class_number = config['class_number']
+learning_rate = config['learning_rate']
+extractor = config['extractor']
+seed = 42
 gamma = 10
 mu = 1e-2
 val_model_epoch = 3
@@ -62,6 +61,7 @@ if os.path.isdir(test_case_place):
     shutil.rmtree(test_case_place)
 os.makedirs(test_case_place)
 
+logger = get_logger(os.path.join(test_case_place, 'messages'))
 writer = SummaryWriter(
             log_dir = os.path.join(test_case_place, 'eval')
         )
@@ -94,13 +94,13 @@ datasets = ['rel', 'skt', 'qdr', 'inf']
 #for target in datasets:
 for target in ['rel']:
     sources = list(filter(lambda e: e != target, datasets))
-    print("Selected sources: ", sources)
-    print("Selected target: ", target)
-    print("="*50)
+    logger.info("Selected sources: ", sources)
+    logger.info("Selected target: ", target)
+    logger.info("="*50)
     ## ==========================
     # Initialize MDAN model
     ## ==========================
-    mdan = load_model('mdan', class_number, len(sources)).to(device)
+    mdan = load_model('mdan', class_number, len(sources), extractor).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
     # Decay LR by a factor of 0.1 every 7 epochs
     scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
@@ -116,8 +116,8 @@ for target in ['rel']:
     train_loss = []
     val_acc = []
     val_loss = []
-    print("Total Epochs: {}, Total iteration: {}/epoch".format(total_epoch, max_iter))
-    print("Starting training...")
+    logger.info("Total Epochs: {}, Total iteration: {}/epoch".format(total_epoch, max_iter))
+    logger.info("Starting training...")
     
     for epoch in range(total_epoch):
         scheduler_warmup.step()
@@ -131,9 +131,9 @@ for target in ['rel']:
             datasets, batch_size, is_train = True, resize = resize, class_num = class_number)
         
         iter_cnt = 0
-        
+        epoch_start_time = time.time()
         for batch in multi_data_loader:
-            batch_start_time = time.time()
+            
             source_labels = torch.ones(batch_size, requires_grad=False).type(torch.LongTensor).to(device)
             target_labels = torch.zeros(batch_size, requires_grad=False).type(torch.LongTensor).to(device)
             # sub-sampled data from each source and target
@@ -174,7 +174,8 @@ for target in ['rel']:
             running_cls_loss += torch.max(losses).item()
             running_domain_loss += torch.max(domain_losses).item()
             iter_cnt+=1
-            batch_end_time = time.time() - batch_start_time
+            
+            """
             if iter_cnt % train_msg_iter == 0:
                 print("Epoch {}/{}, Iteration {}/{}, Training loss: {:.4f}, Time/Batch: {:.4f}".format(
                     epoch,total_epoch,
@@ -182,13 +183,15 @@ for target in ['rel']:
                     running_loss / (batch_size * 4 * iter_cnt),
                     batch_end_time
                 ))
+            """
             
-            
-        print("Epoch {}/{}, Training Loss {:.4f}, Classify Loss: {:.4f}, Domain Loss: {:.4f}".format(
+        epoch_end_time = time.time() - epoch_start_time    
+        logger.info("Epoch {}/{}, Training Loss {:.4f}, Classify Loss: {:.4f}, Domain Loss: {:.4f}, Time/Epoch: {:.4f}".format(
             epoch, total_epoch, 
             running_loss/train_dataset_size,
             running_cls_loss / train_dataset_size,
-            running_domain_loss / train_dataset_size
+            running_domain_loss / train_dataset_size,
+            epoch_end_time
         ))
         train_loss.append(running_loss/train_dataset_size)
         writer.add_scalar('Training_Loss', running_loss/train_dataset_size)
@@ -200,7 +203,7 @@ for target in ['rel']:
         # model validation 
         ## =========================
         if epoch % val_model_epoch == 0:
-            print("Validating model...")
+            logger.info("Validating model...")
             validation_loss = 0.0
             validation_corrects = 0
             
@@ -225,7 +228,7 @@ for target in ['rel']:
             validation_loss = validation_loss / len(validate_datasets[target])
             validation_corrects = validation_corrects.double() / len(validate_datasets[target])
             
-            print("Epoch: {}/{}, Validation Loss: {:.4f}, Validation Acc: {:.4f}".format(
+            logger.info("Epoch: {}/{}, Validation Loss: {:.4f}, Validation Acc: {:.4f}".format(
                 epoch, total_epoch,
                 validation_loss, validation_corrects
             ))
@@ -236,7 +239,7 @@ for target in ['rel']:
             writer.add_scalar('Validation_Accuracy', validation_corrects)
             
             if validation_corrects >= best_acc:
-                print("Update model...")
+                logger.info("Update model...")
                 best_acc = validation_corrects
                 best_model_wts = copy.deepcopy(mdan.state_dict())
                 torch.save({
