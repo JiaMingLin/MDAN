@@ -1,6 +1,8 @@
 name: test
 total_epoch: 10
-batch_size: 32
+batch_size: 16
 class_number: 10
 learning_rate: 0.002
 extractor: vgg16_bn
+number_workers: 8
+image_size:224

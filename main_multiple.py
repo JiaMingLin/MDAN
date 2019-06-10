@@ -46,12 +46,14 @@ batch_size = config['batch_size']
 class_number = config['class_number']
 learning_rate = config['learning_rate']
 extractor = config['extractor']
+image_size = config['image_size']
+number_worker = config['number_workers']
 seed = 42
 gamma = 10
 mu = 1e-2
 val_model_epoch = 3
 train_msg_iter = 100
-resize = (224,224)
+resize = (image_size,image_size)
 
 ## ===============================
 # Saved result place
@@ -84,18 +86,18 @@ validate_datasets = {
 }
 
 validate_dataloader = {
-    'rel': DataLoader(validate_datasets['rel'], batch_size=batch_size,shuffle=False, num_workers=8),
-    'skt': DataLoader(validate_datasets['skt'], batch_size=batch_size,shuffle=False, num_workers=8),
-    'qdr': DataLoader(validate_datasets['qdr'], batch_size=batch_size,shuffle=False, num_workers=8),
-    'inf': DataLoader(validate_datasets['inf'], batch_size=batch_size,shuffle=False, num_workers=8)
+    'rel': DataLoader(validate_datasets['rel'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
+    'skt': DataLoader(validate_datasets['skt'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
+    'qdr': DataLoader(validate_datasets['qdr'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
+    'inf': DataLoader(validate_datasets['inf'], batch_size=batch_size,shuffle=False, num_workers=number_worker)
 }
 
 datasets = ['rel', 'skt', 'qdr', 'inf']
 #for target in datasets:
 for target in ['rel']:
     sources = list(filter(lambda e: e != target, datasets))
-    logger.info("Selected sources: ", sources)
-    logger.info("Selected target: ", target)
+    logger.info("Selected sources: {}".format(str(sources)))
+    logger.info("Selected target: ".format(target))
     logger.info("="*50)
     ## ==========================
     # Initialize MDAN model
