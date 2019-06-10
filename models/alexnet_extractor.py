@@ -30,6 +30,7 @@ class AlexNetExtractor(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
+        self.output_feature_len = 256 * 6 * 6
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
 
     def forward(self, x):

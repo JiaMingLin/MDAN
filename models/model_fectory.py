@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, models, transforms
 from .alexnet_extractor import alexnet_extractor
+from .vgg16_extractor import vgg16_extractor
 
 class GradientReversalLayer(torch.autograd.Function):
     """
@@ -21,16 +22,15 @@ class MDANet(nn.Module):
     """
     Multi-layer perceptron with adversarial regularizer by domain classification.
     """
-    def __init__(self, class_num, domain_num):
+    def __init__(self, class_num, domain_num, extractor):
         super(MDANet, self).__init__()
         
         # alexnet as feature extractor
-        self.feature_extractor = alexnet_extractor(pretrained=True)
-        
+        self.feature_extractor = extractor
         # image classifier
         self.classifier = nn.Sequential(
             nn.Dropout(),
-            nn.Linear(256 * 6 * 6, 4096),
+            nn.Linear(self.feature_extractor.output_feature_len, 4096),
             nn.ReLU(inplace=True),
             nn.Dropout(),
             nn.Linear(4096, 4096),
@@ -39,10 +39,12 @@ class MDANet(nn.Module):
         )
         
         # Parameter of the domain classification layer, multiple sources single target domain adaptation.
-        self.domain_classifier = nn.ModuleList([nn.Linear(256 * 6 * 6, 2) for _ in range(domain_num)])
+        self.domain_classifier = nn.ModuleList([nn.Linear(self.feature_extractor.output_feature_len, 2) for _ in range(domain_num)])
 
         # Gradient reversal layer.
         self.grls = [GradientReversalLayer() for _ in range(domain_num)]
+
+        self._initialize_weights()
 
     def forward(self, source_inputs_list, target_inputs):
         """
@@ -85,9 +87,13 @@ class MDANet(nn.Module):
             if isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
-    
-    
-def load_model(name, class_num, domain_num):
+
+extractor_mapping = {
+    'alexnet': alexnet_extractor(pretrained=True),
+    'vgg16_bn': vgg16_extractor(pretrained=True)
+}
+def load_model(name, class_num, domain_num, extractor = 'alexnet'):
+    feature_extractor = extractor_mapping[extractor]
     if name == 'mdan':
-        return MDANet(class_num, domain_num)
+        return MDANet(class_num, domain_num, feature_extractor)
     
