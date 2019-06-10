@@ -7,6 +7,7 @@ import constant
 from utils import get_logger, get_lr
 from datasets import data_loader as dl
 from models.model_fectory import MDANet
+from warmup_scheduler import GradualWarmupScheduler
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -102,7 +103,9 @@ for target in ['rel']:
     mdan = MDANet(class_number, len(sources)).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
     # Decay LR by a factor of 0.1 every 7 epochs
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
+    scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=30, after_scheduler=scheduler_plateau)
+    #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     mdan.train()
     
     ## ==========================
@@ -117,7 +120,7 @@ for target in ['rel']:
     print("Starting training...")
     
     for epoch in range(total_epoch):
-        scheduler.step()
+        scheduler_warmup.step()
         running_loss = 0.0
         running_cls_loss = 0.0
         running_domain_loss = 0.0
