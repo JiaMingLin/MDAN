@@ -85,7 +85,7 @@ class MDANet(nn.Module):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                m.weight.data.normal_(0, 0.01)
+                torch.nn.init.xavier_uniform(m.weight)
                 m.bias.data.zero_()
 
 extractor_mapping = {
