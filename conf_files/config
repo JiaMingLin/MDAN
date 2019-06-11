@@ -3,6 +3,6 @@ total_epoch: 20
 batch_size: 16
 class_number: 3
 learning_rate: 0.002
-extractor: alexnet
+extractor: resnet50
 number_workers: 4
 image_size:224
