@@ -97,7 +97,9 @@ extractor_mapping = {
     'senet154': senet154(pretrained=True), 
     'se_resnet50': se_resnet50(pretrained=True), 
     'se_resnet101': se_resnet101(pretrained=True), 
-    'se_resnet152': se_resnet152(pretrained=True)
+    'se_resnet152': se_resnet152(pretrained=True),
+    'se_resnext50_32x4d': se_resnext50_32x4d(pretrained=True),
+    'se_resnext101_32x4d': se_resnext101_32x4d(pretrained=True)
 }
 
 def load_model(name, class_num, domain_num, extractor = 'alexnet'):
