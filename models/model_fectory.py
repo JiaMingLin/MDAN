@@ -5,6 +5,7 @@ from torchvision import datasets, models, transforms
 from .alexnet_extractor import alexnet_extractor
 from .vgg16_extractor import vgg16_extractor
 from .resnet50_extractor import resnet50_extractor
+from .senet_extractor import senet154, se_resnet50, se_resnet101, se_resnet152, se_resnext50_32x4d, se_resnext101_32x4d
 
 class GradientReversalLayer(torch.autograd.Function):
     """
@@ -92,8 +93,15 @@ class MDANet(nn.Module):
 extractor_mapping = {
     'alexnet': alexnet_extractor(pretrained=True),
     'vgg16_bn': vgg16_extractor(pretrained=True),
-    'resnet50': resnet50_extractor(pretrained=True)
+    'resnet50': resnet50_extractor(pretrained=True),
+    'senet154': senet154(), 
+    'se_resnet50': se_resnet50(), 
+    'se_resnet101': se_resnet101(), 
+    'se_resnet152': se_resnet152(),
+    'se_resnext50_32x4d': se_resnext50_32x4d(),
+    'se_resnext101_32x4d': se_resnext101_32x4d()
 }
+
 def load_model(name, class_num, domain_num, extractor = 'alexnet'):
     feature_extractor = extractor_mapping[extractor]
     if name == 'mdan':

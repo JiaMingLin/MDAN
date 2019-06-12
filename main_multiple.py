@@ -4,7 +4,7 @@
 from __future__ import print_function, division
 
 import constant
-from utils import get_logger, get_lr
+from utils import get_logger, get_lr, save_model, resume_checkpoint
 from datasets import data_loader as dl
 from models.model_fectory import MDANet, load_model
 from warmup_scheduler import GradualWarmupScheduler
@@ -48,6 +48,7 @@ learning_rate = config['learning_rate']
 extractor = config['extractor']
 image_size = config['image_size']
 number_worker = config['number_workers']
+resume_train = config['resume_train']
 seed = 42
 gamma = 10
 mu = 1e-2
@@ -58,10 +59,16 @@ resize = (image_size,image_size)
 ## ===============================
 # Saved result place
 ## ===============================
+
+
 test_case_place = os.path.join(constant.logs_root, name)
-if os.path.isdir(test_case_place):
-    shutil.rmtree(test_case_place)
-os.makedirs(test_case_place)
+
+# for new training, create new save place
+# if resume, keep previous save place
+if resume is False:
+    if os.path.isdir(test_case_place):
+        shutil.rmtree(test_case_place)
+    os.makedirs(test_case_place)
 
 logger = get_logger(os.path.join(test_case_place, 'messages'))
 writer = SummaryWriter(
@@ -97,18 +104,26 @@ datasets = ['rel', 'skt', 'qdr', 'inf']
 for target in ['rel']:
     sources = list(filter(lambda e: e != target, datasets))
     logger.info("Selected sources: {}".format(str(sources)))
-    logger.info("Selected target: ".format(target))
-    logger.info("="*50)
+    logger.info("Selected target: {}".format(target))
+    logger.info("="*100)
     ## ==========================
     # Initialize MDAN model
     ## ==========================
     mdan = load_model('mdan', class_number, len(sources), extractor).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
     # Decay LR by a factor of 0.1 every 7 epochs
+    #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
+    resume_epoch = 0
+    if resume is True:
+        resume_epoch, model_state_dict, optimizer_state_dict = resume_checkpoint(test_case_place, file_name = 'best_model.pt')
+        mdan.load_state_dict(model_state_dict)
+        optimizer.load_state_dict(optimizer_state_dict)
+        mdan.eval()
+    else:
+        mdan.train()
+
     scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
     scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=30, after_scheduler=scheduler_plateau)
-    #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
-    mdan.train()
     
     ## ==========================
     #  MDAN Training
@@ -121,7 +136,7 @@ for target in ['rel']:
     logger.info("Total Epochs: {}, Total iteration: {}/epoch".format(total_epoch, max_iter))
     logger.info("Starting training...")
     
-    for epoch in range(total_epoch):
+    for epoch in range(resume_epoch, total_epoch):
         
         running_loss = 0.0
         running_cls_loss = 0.0
@@ -242,16 +257,25 @@ for target in ['rel']:
             
             writer.add_scalar('Validation_Loss', validation_loss)
             writer.add_scalar('Validation_Accuracy', validation_corrects)
+            save_model(
+                model_name = 'checkpoint_epoch_{}.pt'.format(epoch), 
+                epoch = epoch, 
+                model = mdan, 
+                loss = {'train': train_loss, 'val': val_loss}, 
+                acc = {'val': val_acc}, 
+                save_dir = test_case_place
+            )
+
             
             if validation_corrects >= best_acc:
-                logger.info("Update model...")
+                logger.info("Update model to path {}...".format(os.path.join(test_case_place, 'best_model.pt')))
                 best_acc = validation_corrects
-                best_model_wts = copy.deepcopy(mdan.state_dict())
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': mdan.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': {'train': train_loss, 'val': val_loss},
-                    'acc': {'val': val_acc}
-                    }, os.path.join(test_case_place, 'best_model.pt')
+                save_model(
+                    model_name = 'best_model.pt', 
+                    epoch = epoch, 
+                    model = mdan, 
+                    loss = {'train': train_loss, 'val': val_loss}, 
+                    acc = {'val': val_acc}, 
+                    save_dir = test_case_place
                 )
+                

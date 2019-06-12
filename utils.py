@@ -72,3 +72,25 @@ def multi_data_loader(inputs, targets, batch_size, shuffle=True):
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
+
+
+def save_model(model_name, epoch, model, loss, acc, save_dir):
+    torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            'acc': acc
+        }, os.path.join(save_dir, model_name)
+        )
+    pass
+def resume_checkpoint(save_dir, file_name = 'best_model.pt'):
+    checkpoint = torch.load(os.path.join(save_dir, file_name))
+    
+    epoch = checkpoint['epoch']
+    model_state_dict = checkpoint['model_state_dict']
+    optimizer_state_dict = checkpoint['optimizer_state_dict']
+    
+    return epoch, model_state_dict, optimizer_state_dict
+
+
