@@ -94,12 +94,12 @@ extractor_mapping = {
     'alexnet': alexnet_extractor(pretrained=True),
     'vgg16_bn': vgg16_extractor(pretrained=True),
     'resnet50': resnet50_extractor(pretrained=True),
-    'senet154': senet154(pretrained=True), 
-    'se_resnet50': se_resnet50(pretrained=True), 
-    'se_resnet101': se_resnet101(pretrained=True), 
-    'se_resnet152': se_resnet152(pretrained=True),
-    'se_resnext50_32x4d': se_resnext50_32x4d(pretrained=True),
-    'se_resnext101_32x4d': se_resnext101_32x4d(pretrained=True)
+    'senet154': senet154(), 
+    'se_resnet50': se_resnet50(), 
+    'se_resnet101': se_resnet101(), 
+    'se_resnet152': se_resnet152(),
+    'se_resnext50_32x4d': se_resnext50_32x4d(),
+    'se_resnext101_32x4d': se_resnext101_32x4d()
 }
 
 def load_model(name, class_num, domain_num, extractor = 'alexnet'):
