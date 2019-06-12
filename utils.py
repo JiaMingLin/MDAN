@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Date     :2016-06-28 14:12
+import os
 import sys
 import logging
 import torch
