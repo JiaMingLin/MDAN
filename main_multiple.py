@@ -48,7 +48,7 @@ learning_rate = config['learning_rate']
 extractor = config['extractor']
 image_size = config['image_size']
 number_worker = config['number_workers']
-resume_train = config['resume']
+resume_train = int(config['resume'])
 seed = 42
 gamma = 10
 mu = 1e-2
@@ -65,7 +65,7 @@ test_case_place = os.path.join(constant.logs_root, name)
 
 # for new training, create new save place
 # if resume, keep previous save place
-if resume is False:
+if resume_train is False:
     if os.path.isdir(test_case_place):
         shutil.rmtree(test_case_place)
     os.makedirs(test_case_place)
@@ -114,7 +114,7 @@ for target in ['rel']:
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
-    if resume is True:
+    if resume_train is True:
         resume_epoch, model_state_dict, optimizer_state_dict = resume_checkpoint(test_case_place, file_name = 'best_model.pt')
         mdan.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
