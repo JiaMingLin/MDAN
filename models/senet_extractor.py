@@ -419,7 +419,7 @@ def se_resnet152(num_classes=1000, pretrained='imagenet'):
     return model
 
 def se_resnext50_32x4d(num_classes=1000, pretrained='imagenet'):
-    model = SENet(SEResNeXtBottleneck, [3, 4, 6, 3], groups=32, reduction=16,
+    model = SENetExtractor(SEResNeXtBottleneck, [3, 4, 6, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,
                   downsample_kernel_size=1, downsample_padding=0,
                   num_classes=num_classes)
@@ -430,7 +430,7 @@ def se_resnext50_32x4d(num_classes=1000, pretrained='imagenet'):
 
 
 def se_resnext101_32x4d(num_classes=1000, pretrained='imagenet'):
-    model = SENet(SEResNeXtBottleneck, [3, 4, 23, 3], groups=32, reduction=16,
+    model = SENetExtractor(SEResNeXtBottleneck, [3, 4, 23, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,
                   downsample_kernel_size=1, downsample_padding=0,
                   num_classes=num_classes)
