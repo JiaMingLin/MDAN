@@ -261,6 +261,7 @@ for target in ['rel']:
                 model_name = 'checkpoint_epoch_{}.pt'.format(epoch), 
                 epoch = epoch, 
                 model = mdan, 
+                optimizer = optimizer,
                 loss = {'train': train_loss, 'val': val_loss}, 
                 acc = {'val': val_acc}, 
                 save_dir = test_case_place
@@ -274,6 +275,7 @@ for target in ['rel']:
                     model_name = 'best_model.pt', 
                     epoch = epoch, 
                     model = mdan, 
+                    optimizer = optimizer,
                     loss = {'train': train_loss, 'val': val_loss}, 
                     acc = {'val': val_acc}, 
                     save_dir = test_case_place

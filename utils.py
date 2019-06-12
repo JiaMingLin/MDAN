@@ -75,7 +75,7 @@ def get_lr(optimizer):
         return param_group['lr']
 
 
-def save_model(model_name, epoch, model, loss, acc, save_dir):
+def save_model(model_name, epoch, model, optimizer, loss, acc, save_dir):
     torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
