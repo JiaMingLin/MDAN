@@ -257,9 +257,18 @@ for target in ['rel']:
             
             writer.add_scalar('Validation_Loss', validation_loss)
             writer.add_scalar('Validation_Accuracy', validation_corrects)
+            save_model(
+                model_name = 'checkpoint_epoch_{}.pt'.format(epoch), 
+                epoch = epoch, 
+                model = mdan, 
+                loss = {'train': train_loss, 'val': val_loss}, 
+                acc = {'val': val_acc}, 
+                save_dir = test_case_place
+            )
+
             
             if validation_corrects >= best_acc:
-                logger.info("Update model to path {}...".format(os.path.join(test_case_place, )))
+                logger.info("Update model to path {}...".format(os.path.join(test_case_place, 'best_model.pt')))
                 best_acc = validation_corrects
                 save_model(
                     model_name = 'best_model.pt', 
