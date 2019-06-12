@@ -7,7 +7,7 @@ import constant
 from utils import get_logger, get_lr, save_model, resume_checkpoint
 from datasets import data_loader as dl
 from models.model_fectory import MDANet, load_model
-from warmup_scheduler import GradualWarmupScheduler
+from models.warmup_scheduler import GradualWarmupScheduler
 
 import numpy as np
 import matplotlib.pyplot as plt
