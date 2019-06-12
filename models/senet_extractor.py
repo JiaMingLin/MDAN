@@ -252,7 +252,7 @@ class SENetExtractor(nn.Module):
         num_classes (int): Number of outputs in `last_linear` layer.
             - For all models: 1000
         """
-        super(SENet, self).__init__()
+        super(SENetExtractor, self).__init__()
         self.inplanes = inplanes
         if input_3x3:
             layer0_modules = [
