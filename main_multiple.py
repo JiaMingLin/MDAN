@@ -119,6 +119,7 @@ for target in ['rel']:
         mdan.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
         mdan.eval()
+        logger.info("Retain training from epoch {}".format(resume_epoch))
     else:
         mdan.train()
 
