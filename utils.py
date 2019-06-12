@@ -3,6 +3,7 @@
 # @Date     :2016-06-28 14:12
 import sys
 import logging
+import torch
 import numpy as np
 
 
@@ -90,7 +91,7 @@ def resume_checkpoint(save_dir, file_name = 'best_model.pt'):
     epoch = checkpoint['epoch']
     model_state_dict = checkpoint['model_state_dict']
     optimizer_state_dict = checkpoint['optimizer_state_dict']
-    
+
     return epoch, model_state_dict, optimizer_state_dict
 
 
