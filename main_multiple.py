@@ -7,7 +7,7 @@ import constant
 from utils import get_logger, get_lr, save_model, resume_checkpoint
 from datasets import data_loader as dl
 from models.model_fectory import MDANet, load_model
-from warmup_scheduler import GradualWarmupScheduler
+from models.warmup_scheduler import GradualWarmupScheduler
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -48,7 +48,7 @@ learning_rate = config['learning_rate']
 extractor = config['extractor']
 image_size = config['image_size']
 number_worker = config['number_workers']
-resume_train = config['resume_train']
+resume_train = bool(config['resume'])
 seed = 42
 gamma = 10
 mu = 1e-2
@@ -65,7 +65,7 @@ test_case_place = os.path.join(constant.logs_root, name)
 
 # for new training, create new save place
 # if resume, keep previous save place
-if resume is False:
+if resume_train is False:
     if os.path.isdir(test_case_place):
         shutil.rmtree(test_case_place)
     os.makedirs(test_case_place)
@@ -114,11 +114,12 @@ for target in ['rel']:
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
-    if resume is True:
+    if resume_train is True:
         resume_epoch, model_state_dict, optimizer_state_dict = resume_checkpoint(test_case_place, file_name = 'best_model.pt')
         mdan.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
         mdan.eval()
+        logger.info("Retain training from epoch {}".format(resume_epoch))
     else:
         mdan.train()
 
@@ -261,6 +262,7 @@ for target in ['rel']:
                 model_name = 'checkpoint_epoch_{}.pt'.format(epoch), 
                 epoch = epoch, 
                 model = mdan, 
+                optimizer = optimizer,
                 loss = {'train': train_loss, 'val': val_loss}, 
                 acc = {'val': val_acc}, 
                 save_dir = test_case_place
@@ -274,6 +276,7 @@ for target in ['rel']:
                     model_name = 'best_model.pt', 
                     epoch = epoch, 
                     model = mdan, 
+                    optimizer = optimizer,
                     loss = {'train': train_loss, 'val': val_loss}, 
                     acc = {'val': val_acc}, 
                     save_dir = test_case_place
