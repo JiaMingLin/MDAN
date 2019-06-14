@@ -124,7 +124,7 @@ for target in ['rel']:
         mdan.train()
 
     scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=30, after_scheduler=scheduler_plateau)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=17, after_scheduler=scheduler_plateau)
     
     ## ==========================
     #  MDAN Training

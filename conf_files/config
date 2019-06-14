@@ -3,7 +3,7 @@ total_epoch: 20
 batch_size: 16
 class_number: 3
 learning_rate: 0.002
-extractor: resnet50
+extractor: se_resnext50_32x4d
 number_workers: 4
 image_size:224
-resume: 0
+resume: 1
