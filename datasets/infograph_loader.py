@@ -4,7 +4,7 @@ from .datagen import DataGenerator
 from .cust_transforms import Lighting, __imagenet_pca
 import constant
 
-def get_dataset(train, resize = None, class_num = 0):
+def get_dataset(train, resize = None, class_num = 0, trans = True):
     """Get real dataset loader."""
     
     name = 'infograph'
@@ -32,7 +32,8 @@ def get_dataset(train, resize = None, class_num = 0):
         ]
 
     transform = transforms.Compose(transform_pipline)
-    
+    if trans is False:
+        transform = None
     # dataset and data loader
     dataset = DataGenerator(
         dataset_name = name,
