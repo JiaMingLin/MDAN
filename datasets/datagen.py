@@ -57,7 +57,7 @@ class DataGenerator(data.Dataset):
             self.img_paths = temp_img_path
             self.img_labels = temp_img_label
             self.classes = self.classes[:class_num]
-            self.class_cnt = self.class_cnt[:class_num]
+            self.class_cnt = dict(self.class_cnt.items()[:class_num])
 
     def __getitem__(self, idx):
         
