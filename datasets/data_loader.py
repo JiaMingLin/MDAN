@@ -34,7 +34,7 @@ def get_sampler(dataset):
         return RandomSampler(dataset, num_samples=sampling_size, replacement=True)
 
     elif sampling == 'over':
-        targets = dataset.img_labels   # in list
+        targets = [int(label) for label in dataset.img_labels]   # in list
         class_count = np.unique(targets, return_counts=True)[1]
         weight = 1. / class_count
         samples_weight = weight[targets]
