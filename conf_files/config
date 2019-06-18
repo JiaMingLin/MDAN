@@ -7,3 +7,5 @@ extractor: se_resnext50_32x4d
 number_workers: 4
 image_size:224
 resume: 1
+sampling: over
+sampling_size: 80000
