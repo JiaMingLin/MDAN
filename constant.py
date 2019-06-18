@@ -10,3 +10,6 @@ dataset_mean = (dataset_mean_value, dataset_mean_value, dataset_mean_value)
 dataset_std = (dataset_std_value, dataset_std_value, dataset_std_value)
 
 num_workers = 8
+
+sampling = 'random'
+sampling_size = 80000

@@ -87,8 +87,47 @@ class MDANet(nn.Module):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                torch.nn.init.xavier_uniform(m.weight)
+                torch.nn.init.xavier_uniform_(m.weight)
                 m.bias.data.zero_()
+
+
+class MSMCD(nn.Module):
+    def __init__(self, class_num, domain_num, extractor):
+        super(MDANet, self).__init__()
+        
+        # alexnet as feature extractor
+        self.feature_extractor = extractor
+        # image classifier
+        self.classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(self.feature_extractor.output_feature_len, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, class_num),
+        )
+        
+        # Parameter of the domain classification layer, multiple sources single target domain adaptation.
+        self.domain_classifier = nn.ModuleList([nn.Linear(self.feature_extractor.output_feature_len, 2) for _ in range(domain_num)])
+
+        # Gradient reversal layer.
+        self.grls = [GradientReversalLayer() for _ in range(domain_num)]
+
+        self._initialize_weights()
+
+    def forward(self, source_inputs_list, target_inputs):
+        pass
+
+    def inference(self, input):
+        pass
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform_(m.weight)
+                m.bias.data.zero_()
+
 
 extractor_mapping = {
     'alexnet': alexnet_extractor(pretrained=True),

@@ -29,11 +29,18 @@ class DataGenerator(data.Dataset):
         self.img_labels = []
 
         self.n_data = 0
+        self.class_cnt = dict()
         for data in data_list[1:]:
             data = data.strip('\n').split(',')
-            self.img_paths.append(data[0])
-            self.img_labels.append(data[1])
+            img_path, label = data[0],data[1]
+            self.img_paths.append(img_path)
+            self.img_labels.append(label)
             self.n_data += 1
+
+            if label in self.class_cnt.keys():
+                self.class_cnt[label] += 1
+            else:
+                self.class_cnt[label] = 1
         
         self.classes = [name for name in os.listdir(os.path.join(constant.data_root, dataset_name)) if 'csv' not in name]
         self.classes = sorted(self.classes, key=lambda s: s.lower())
@@ -50,8 +57,7 @@ class DataGenerator(data.Dataset):
             self.img_paths = temp_img_path
             self.img_labels = temp_img_label
             self.classes = self.classes[:class_num]
-
-
+            self.class_cnt = self.class_cnt[:class_num]
 
     def __getitem__(self, idx):
         

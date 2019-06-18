@@ -47,8 +47,10 @@ class_number = config['class_number']
 learning_rate = config['learning_rate']
 extractor = config['extractor']
 image_size = config['image_size']
-number_worker = config['number_workers']
 resume_train = bool(config['resume'])
+constant.number_worker = config['number_workers']
+constant.sampling = config['sampling']
+constant.sampling_size = config['sampling_size']
 seed = 42
 gamma = 10
 mu = 1e-2
@@ -59,7 +61,6 @@ resize = (image_size,image_size)
 ## ===============================
 # Saved result place
 ## ===============================
-
 
 test_case_place = os.path.join(constant.logs_root, name)
 
@@ -93,10 +94,10 @@ validate_datasets = {
 }
 
 validate_dataloader = {
-    'rel': DataLoader(validate_datasets['rel'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
-    'skt': DataLoader(validate_datasets['skt'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
-    'qdr': DataLoader(validate_datasets['qdr'], batch_size=batch_size,shuffle=False, num_workers=number_worker),
-    'inf': DataLoader(validate_datasets['inf'], batch_size=batch_size,shuffle=False, num_workers=number_worker)
+    'rel': DataLoader(validate_datasets['rel'], batch_size=batch_size,shuffle=False, num_workers=constant.number_worker),
+    'skt': DataLoader(validate_datasets['skt'], batch_size=batch_size,shuffle=False, num_workers=constant.number_worker),
+    'qdr': DataLoader(validate_datasets['qdr'], batch_size=batch_size,shuffle=False, num_workers=constant.number_worker),
+    'inf': DataLoader(validate_datasets['inf'], batch_size=batch_size,shuffle=False, num_workers=constant.number_worker)
 }
 
 datasets = ['rel', 'skt', 'qdr', 'inf']
