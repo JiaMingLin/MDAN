@@ -1,11 +1,12 @@
 name: test
-total_epoch: 20
+total_epoch: 6
 batch_size: 10
 class_number: 3
 learning_rate: 0.002
 extractor: se_resnext50_32x4d
 number_workers: 4
 image_size:224
-resume: 1
+resume: 0
 sampling: random
 sampling_size: 300
+target_list:skt,rel

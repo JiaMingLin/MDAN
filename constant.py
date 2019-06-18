@@ -13,3 +13,5 @@ num_workers = 8
 
 sampling = 'random'
 sampling_size = 80000
+
+resume_train = False

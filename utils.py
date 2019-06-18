@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import torch
+import pickle
 import numpy as np
 
 
@@ -82,10 +83,13 @@ def save_model(model_name, epoch, model, optimizer, loss, acc, save_dir):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
-            'acc': acc
         }, os.path.join(save_dir, model_name)
         )
-    pass
+    stat_save = '{}_stat.pkl'.format(model_name)
+    with open(os.path.join(save_dir, stat_save), 'wb') as handle:
+        statistical = {'acc': acc}
+        pickle.dump(statistical, handle)
+
 def resume_checkpoint(save_dir, file_name = 'best_model.pt'):
     checkpoint = torch.load(os.path.join(save_dir, file_name))
     

@@ -27,6 +27,7 @@ from tensorboardX import SummaryWriter
 from torchvision import datasets, models, transforms
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
+from sklearn.metrics import precision_recall_fscore_support
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,7 +40,6 @@ parser.add_argument('--config_file_path', type=str, default='conf_files/config')
 ## ===============================
 args = parser.parse_args()
 config = read_config.read(args.config_file_path)
-print(config)
 name = config['name']
 total_epoch = config['total_epoch']
 batch_size = config['batch_size']
@@ -47,14 +47,17 @@ class_number = config['class_number']
 learning_rate = config['learning_rate']
 extractor = config['extractor']
 image_size = config['image_size']
-resume_train = bool(config['resume'])
+target_list = config['target_list'].split(',')
+
+constant.resume_train = bool(config['resume'])
 constant.number_worker = config['number_workers']
 constant.sampling = config['sampling']
 constant.sampling_size = config['sampling_size']
+
 seed = 42
 gamma = 10
 mu = 1e-2
-val_model_epoch = 3
+val_model_epoch = 1
 train_msg_iter = 100
 resize = (image_size,image_size)
 
@@ -66,15 +69,10 @@ test_case_place = os.path.join(constant.logs_root, name)
 
 # for new training, create new save place
 # if resume, keep previous save place
-if resume_train is False:
+if constant.resume_train is False:
     if os.path.isdir(test_case_place):
         shutil.rmtree(test_case_place)
     os.makedirs(test_case_place)
-
-logger = get_logger(os.path.join(test_case_place, 'messages'))
-writer = SummaryWriter(
-            log_dir = os.path.join(test_case_place, 'eval')
-        )
 
 train_dataset_size = {
     'rel': len(dl.load_data('rel', is_train = True, resize = resize, class_num = class_number)),
@@ -102,7 +100,13 @@ validate_dataloader = {
 
 datasets = ['rel', 'skt', 'qdr', 'inf']
 #for target in datasets:
-for target in ['rel']:
+for target in target_list:
+
+    logger = get_logger(os.path.join(test_case_place, 'messages_{}'.format(target)))
+    writer = SummaryWriter(
+            log_dir = os.path.join(test_case_place, 'eval_{}'.format(target))
+        )
+    logger.info(config)
     sources = list(filter(lambda e: e != target, datasets))
     logger.info("Selected sources: {}".format(str(sources)))
     logger.info("Selected target: {}".format(target))
@@ -115,7 +119,7 @@ for target in ['rel']:
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
-    if resume_train is True:
+    if constant.resume_train is True:
         resume_epoch, model_state_dict, optimizer_state_dict = resume_checkpoint(test_case_place, file_name = 'best_model.pt')
         mdan.load_state_dict(model_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
@@ -213,10 +217,10 @@ for target in ['rel']:
             epoch_end_time
         ))
         train_loss.append(running_loss/train_dataset_size)
-        writer.add_scalar('Training_Loss', running_loss/train_dataset_size)
-        writer.add_scalar('Classfication_Loss', running_cls_loss/train_dataset_size)
-        writer.add_scalar('Domain_Loss', running_domain_loss/train_dataset_size)
-        writer.add_scalar('Learning_Rate', get_lr(optimizer))
+        writer.add_scalar('Training_Loss', running_loss/train_dataset_size,epoch+1)
+        writer.add_scalar('Classfication_Loss', running_cls_loss/train_dataset_size, epoch+1)
+        writer.add_scalar('Domain_Loss', running_domain_loss/train_dataset_size, epoch+1)
+        writer.add_scalar('Learning_Rate', get_lr(optimizer), epoch+1)
 
         # 
         scheduler_warmup.step(epoch, metrics=(running_loss/train_dataset_size))
@@ -234,6 +238,8 @@ for target in ['rel']:
             
             dataloader = validate_dataloader[target]
             
+            y_pred = []
+            y_true = []
             # model predict
             for imgs, label in dataloader:
                 imgs = imgs.to(device)
@@ -246,40 +252,58 @@ for target in ['rel']:
                 
                 validation_loss += loss.item()
                 validation_corrects += torch.sum(preds == label.data)
-                
+
+                y_true += label.tolist()
+                y_pred += preds.tolist()
+
+            
+            ## ====================
+            # Accuracy validation
+            ## ====================    
             validation_loss = validation_loss / len(validate_datasets[target])
             validation_corrects = validation_corrects.double() / len(validate_datasets[target])
             
-            logger.info("Epoch: {}/{}, Validation Loss: {:.4f}, Validation Acc: {:.4f}".format(
-                epoch, total_epoch,
-                validation_loss, validation_corrects
-            ))
             val_acc.append(validation_corrects)
             val_loss.append(validation_loss)
+
+            ## ====================
+            # precision, recall, f1-score
+            ## ====================
+            precision, recall, fbeta_score, support = precision_recall_fscore_support(np.array(y_true), np.array(y_pred))
+
+            logger.info("Epoch: {}/{}, Validation Loss: {:.4f}, Validation Acc: {:.4f}, AP: {:.4f}, AR: {:.4f}, f1: {:.4f}".format(
+                epoch, total_epoch,
+                validation_loss, validation_corrects,
+                np.average(precision), np.average(recall), np.average(fbeta_score)
+            ))
             
-            writer.add_scalar('Validation_Loss', validation_loss)
-            writer.add_scalar('Validation_Accuracy', validation_corrects)
+            writer.add_scalar('Validation_Loss', validation_loss, epoch+1)
+            writer.add_scalar('Validation_Accuracy', validation_corrects, epoch+1)
+            writer.add_scalar('Precision', np.average(precision), epoch+1)
+            writer.add_scalar('Recall', np.average(recall), epoch+1)
+            writer.add_scalar('f1-Score', np.average(fbeta_score), epoch+1)
+
             save_model(
-                model_name = 'checkpoint_epoch_{}.pt'.format(epoch), 
+                model_name = '{}_checkpoint_epoch_{}.pt'.format(target, epoch), 
                 epoch = epoch, 
                 model = mdan, 
                 optimizer = optimizer,
                 loss = {'train': train_loss, 'val': val_loss}, 
-                acc = {'val': val_acc}, 
+                acc = {'val': val_acc, 'precision': precision, 'recall': recall, 'fbeta_score': fbeta_score, 'support': support}, 
                 save_dir = test_case_place
             )
 
             
             if validation_corrects >= best_acc:
-                logger.info("Update model to path {}...".format(os.path.join(test_case_place, 'best_model.pt')))
+                logger.info("Update model to path {}...".format(os.path.join(test_case_place, '{}_best_model.pt'.format(target))))
                 best_acc = validation_corrects
                 save_model(
-                    model_name = 'best_model.pt', 
+                    model_name = '{}_best_model.pt'.format(target), 
                     epoch = epoch, 
                     model = mdan, 
                     optimizer = optimizer,
                     loss = {'train': train_loss, 'val': val_loss}, 
-                    acc = {'val': val_acc}, 
+                    acc = {'val': val_acc, 'precision': precision, 'recall': recall, 'fbeta_score': fbeta_score, 'support': support}, 
                     save_dir = test_case_place
                 )
                 
