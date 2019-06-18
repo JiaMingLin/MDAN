@@ -20,10 +20,10 @@ LOADER_MAPPING = {
     "test": test_loader,
 }
 
-def load_data(valid_code, is_train = True, resize = None, class_num = 0):
+def load_data(valid_code, is_train = True, resize = None, class_num = 0, trans = True):
     
     loader = LOADER_MAPPING[valid_code]
-    dataset = loader.get_dataset(is_train, resize, class_num)
+    dataset = loader.get_dataset(is_train, resize, class_num, trans)
     
     return dataset
 

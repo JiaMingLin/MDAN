@@ -3,7 +3,7 @@ from torchvision import datasets, transforms
 from .datagen import DataGenerator
 import constant
 
-def get_dataset(train, resize = None, class_num = 0):
+def get_dataset(train, resize = None, class_num = 0, trans = True):
     """Get real dataset loader."""
     
     name = 'quickdraw'
@@ -28,7 +28,8 @@ def get_dataset(train, resize = None, class_num = 0):
     transform_pipline.append(transforms.ToTensor())
     transform_pipline.append(transforms.Normalize(mean= constant.dataset_mean, std = constant.dataset_std))
     transform = transforms.Compose(transform_pipline)
-    
+    if trans is False:
+        transform = None
     # dataset and data loader
     dataset = DataGenerator(
         dataset_name = name,
