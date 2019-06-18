@@ -130,7 +130,7 @@ for target in ['rel']:
     ## ==========================
     #  MDAN Training
     ## ==========================
-    max_iter = int(max_train_dataset_size/batch_size) + 1
+    max_iter = int(constant.sampling_size/batch_size) + 1
     best_acc = 0
     train_loss = []
     val_acc = []
