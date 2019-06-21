@@ -116,7 +116,6 @@ for target in target_list:
     ## ==========================
     mdan = load_model('mdan', class_number, len(sources), extractor).to(device)
     optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
-    scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=learning_rate, max_lr=learning_rate+0.005)
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
@@ -129,8 +128,8 @@ for target in target_list:
     else:
         mdan.train()
 
-    #scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
-    #scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=17, after_scheduler=scheduler_plateau)
+    scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=17, after_scheduler=scheduler_plateau)
     
     ## ==========================
     #  MDAN Training
@@ -198,8 +197,6 @@ for target in target_list:
             running_cls_loss += torch.max(losses).item()
             running_domain_loss += torch.max(domain_losses).item()
             iter_cnt+=1
-
-            scheduler.step()
             
             """
             if iter_cnt % train_msg_iter == 0:
@@ -226,7 +223,7 @@ for target in target_list:
         writer.add_scalar('Learning_Rate', get_lr(optimizer), epoch+1)
 
         # 
-        #scheduler_warmup.step(epoch, metrics=(running_loss/train_dataset_size))
+        scheduler_warmup.step(epoch, metrics=(running_loss/train_dataset_size))
         
         ## ========================= 
         # model validation 
