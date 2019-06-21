@@ -39,9 +39,18 @@ class MDANet(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(4096, class_num),
         )
+
+        self.domainer = nn.Sequential(
+            nn.Linear(self.feature_extractor.output_feature_len, 2048),
+            nn.ELU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(2048, 2048),
+            nn.ELU(inplace=True),
+            nn.Linear(2048, 2),
+        )
         
         # Parameter of the domain classification layer, multiple sources single target domain adaptation.
-        self.domain_classifier = nn.ModuleList([nn.Linear(self.feature_extractor.output_feature_len, 2) for _ in range(domain_num)])
+        self.domain_classifier = nn.ModuleList([self.domainer for _ in range(domain_num)])
 
         # Gradient reversal layer.
         self.grls = [GradientReversalLayer() for _ in range(domain_num)]

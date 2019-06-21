@@ -115,7 +115,8 @@ for target in target_list:
     # Initialize MDAN model
     ## ==========================
     mdan = load_model('mdan', class_number, len(sources), extractor).to(device)
-    optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
+    #optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
+    optimizer = optim.SGD(mdan.parameters(), lr=learning_rate, momentum= 0.9)
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
@@ -129,7 +130,7 @@ for target in target_list:
         mdan.train()
 
     scheduler_plateau = lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=17, after_scheduler=scheduler_plateau)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=8, total_epoch=8, after_scheduler=scheduler_plateau)
     
     ## ==========================
     #  MDAN Training
