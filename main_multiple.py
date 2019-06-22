@@ -117,7 +117,7 @@ for target in target_list:
     mdan = load_model('mdan', class_number, len(sources), extractor).to(device)
     #optimizer = optim.Adadelta(mdan.parameters(), lr=learning_rate)
     optimizer = optim.SGD(mdan.parameters(), lr=learning_rate, momentum= 0.9)
-    scheduler = lr_scheduler.CyclicLR(optimizer)
+    scheduler = lr_scheduler.CyclicLR(optimizer, base_lr=learning_rate, max_lr=0.009)
     # Decay LR by a factor of 0.1 every 7 epochs
     #scheduler = lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
     resume_epoch = 0
