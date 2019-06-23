@@ -52,7 +52,7 @@ resume_train = bool(config['resume'])
 seed = 42
 gamma = 10
 mu = 1e-2
-val_model_epoch = 3
+val_model_epoch = 1
 train_msg_iter = 100
 resize = (image_size,image_size)
 
